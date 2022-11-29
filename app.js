@@ -1,4 +1,5 @@
-require("dotenv").config(); 
+require("dotenv").config();
+const md5 = require('md5');
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
@@ -7,12 +8,12 @@ const app = express();
 //connect to usersDB
 mongoose.connect("mongodb://localhost:27017/usersDB");
 //create user schema
-const secretKey = process.env.SECRET;
+// const secretKey = process.env.SECRET;
 const userSchema = new mongoose.Schema({
     email: String,
     password: String
 });
-userSchema.plugin(encrypt,{secret:secretKey,encryptedFields:["password"]});
+// userSchema.plugin(encrypt,{secret:secretKey,encryptedFields:["password"]});
 //create user model
 const User = new mongoose.model("User", userSchema);
 //set view engine
@@ -33,7 +34,7 @@ app.route("/login")
         User.findOne({email:req.body.username},(err,found)=>{
             if(!found){
                 res.send("User Not Found!!!");
-            }else if(found.password === req.body.password)
+            }else if(found.password === md5(req.body.password))
             res.render("secrets");
         });
     });
@@ -44,7 +45,7 @@ app.route("/register")
     })
     .post((req, res) => {
 
-        const user = new User({ email: req.body.username, password: req.body.password });
+        const user = new User({ email: req.body.username, password: md5(req.body.password) });
         if (user.save()) {
             res.render("secrets");
         }else{
