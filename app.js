@@ -11,13 +11,23 @@ app.get("/",(req,res)=>{
     res.render("home");
 });
 
-app.get("/login",(req,res)=>{
+app.route("/login")
+.get((req,res)=>{
     res.render("login");
+})
+.post((req,res)=>{
+    res.render("secrets");
 });
 
-app.get("/register",(req,res)=>{
+app.route("/register")
+.get((req,res)=>{
     res.render("register");
+})
+.post((req,res)=>{
+    res.render("secrets");
+
 });
+
 
 app.listen(3000,()=>{
     console.log("started app on port 3000\nhttp://localhost:3000");
