@@ -1,14 +1,13 @@
 require("dotenv").config();
-const md5 = require('md5');
+const bcrypt = require('bcrypt');
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require('mongoose-encryption');
 const app = express();
+const saltRounds = 10;
 //connect to usersDB
 mongoose.connect("mongodb://localhost:27017/usersDB");
-//create user schema
-// const secretKey = process.env.SECRET;
 const userSchema = new mongoose.Schema({
     email: String,
     password: String
@@ -34,8 +33,15 @@ app.route("/login")
         User.findOne({email:req.body.username},(err,found)=>{
             if(!found){
                 res.send("User Not Found!!!");
-            }else if(found.password === md5(req.body.password))
-            res.render("secrets");
+            }else if(found)
+            {
+                                
+                bcrypt.compare(req.body.password, found.password, (err, result)=> {
+                    // result == true
+                    if(result)
+                    res.render("secrets");
+                });
+            }
         });
     });
 
@@ -44,13 +50,17 @@ app.route("/register")
         res.render("register");
     })
     .post((req, res) => {
-
-        const user = new User({ email: req.body.username, password: md5(req.body.password) });
-        if (user.save()) {
-            res.render("secrets");
-        }else{
-            res.send("error while registering...")
-        }
+        bcrypt.hash(req.body.password, saltRounds, (err, hash)=> {
+            // Store hash in your password DB.
+            const user = new User({ email: req.body.username, password: hash });
+            if (user.save()) {
+                res.render("secrets");
+            }else{
+                res.write("error while registering...");
+                res.write(err);
+                res.send();
+            }
+        });
 
     });
 
