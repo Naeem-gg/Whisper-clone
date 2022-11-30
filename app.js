@@ -50,7 +50,19 @@ app.route("/login")
         res.render("login");
     })
     .post((req, res) => {
-
+        const user = new User({
+            username: req.body.username,
+            password: req.body.password
+        });
+        req.login(user, (err) => {
+            if (err) {
+                res.send(err);
+            } else { 
+                passport.authenticate("local")(req, res, () => {
+                    res.redirect("/secrets");
+                });
+             }
+        });
     });
 
 app.route("/register")
@@ -60,7 +72,8 @@ app.route("/register")
     .post((req, res) => {
         User.register({ username: req.body.username }, req.body.password, (err, user) => {
             if (err) {
-                res.send(err);
+                console.log(err);
+                res.redirect("/register");
             } else {
                 passport.authenticate("local")(req, res, () => {
                     res.redirect("/secrets");
@@ -83,6 +96,7 @@ app.get("/secrets", (req, res) => {
 });
 
 app.get("/logout", (req, res) => {
+    req.logout((err)=>{if(err)console.log(err)});        
     res.redirect("/");
 });
 
