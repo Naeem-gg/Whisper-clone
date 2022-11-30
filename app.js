@@ -19,7 +19,7 @@ app.use(express.static("public"));
 
 
 app.use(session({
-    secret: 'this is MY Secret and long string.',
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false
 }));
