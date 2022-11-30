@@ -46,8 +46,8 @@ app.get("/", (req, res) => {
     res.render("home");
 });
 app.route("/login")
-.get((req, res) => {
-    res.render("login");
+    .get((req, res) => {
+        res.render("login");
     })
     .post((req, res) => {
 
@@ -58,32 +58,32 @@ app.route("/register")
         res.render("register");
     })
     .post((req, res) => {
-        User.register({username:req.body.username}, req.body.password, (err, user) => {
+        User.register({ username: req.body.username }, req.body.password, (err, user) => {
             if (err) {
                 res.send(err);
             } else {
-                passport.authenticate("local")(req,res,()=>{
+                passport.authenticate("local")(req, res, () => {
                     res.redirect("/secrets");
                 });
-                
+
             }
-            
+
         });
     });
-    
-    
-    app.get("/secrets", (req, res) => {
-        if (req.isAuthenticated()) {
-    
-            res.render("secrets");
-        } else {
-    
-            res.redirect("/login");
-        }
-    });
-    
-    app.get("/logout", (req, res) => {
-        res.redirect("/");
+
+
+app.get("/secrets", (req, res) => {
+    if (req.isAuthenticated()) {
+
+        res.render("secrets");
+    } else {
+
+        res.redirect("/login");
+    }
+});
+
+app.get("/logout", (req, res) => {
+    res.redirect("/");
 });
 
 app.route("/submit")
