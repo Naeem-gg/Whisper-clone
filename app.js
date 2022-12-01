@@ -42,12 +42,11 @@ const userSchema = new mongoose.Schema({
     password: String,
     googleId: String,
     facebookId:String,
-    githubId:String
-});
-const secretSchema = new mongoose.Schema({
+    githubId:String,
     secret:String
-})
-const Secret = new mongoose.model("Secret",secretSchema);
+});
+
+
 //create user model
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
@@ -195,19 +194,12 @@ app.route("/register")
 
 
 app.get("/secrets", (req, res) => {
-    if (req.isAuthenticated()) {
-
-        Secret.find({},(err,secrets)=>{
-            if(!err)
-            {
-                res.render("secrets",{secrets})
-
-            }
-          });      
-    } else {
-
-        res.redirect("/login");
-    }
+    User.find({secret:{$ne:null}},(err,userWithSecrets)=>{
+        if(!err)
+        {
+            res.render("secrets",{secrets:userWithSecrets});
+        }
+    })
 });
 
 app.get("/logout", (req, res) => {
@@ -225,18 +217,21 @@ app.route("/submit")
         }
     })
     .post((req, res) => {
-        const secret = new Secret({secret:req.body.secret});
-        secret.save((err)=>{
-            if(!err)
-            {
-              Secret.find({},(err,secrets)=>{
+        const secret = req.body.secret;
+        const userId = req.user._id;
+        User.findById(userId,(err,found)=>{
+            found.secret = secret;
+            found.save((err)=>{
                 if(!err)
                 {
-                    res.render("secrets",{secrets})
-
+                    User.find({secret:{$ne:null}},(err,userWithSecrets)=>{
+                        if(!err)
+                        {
+                            res.render("secrets",{secrets:userWithSecrets});
+                        }
+                    })
                 }
-              });      
-            }
+            });
         });
         
     });
