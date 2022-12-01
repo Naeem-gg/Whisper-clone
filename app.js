@@ -7,29 +7,9 @@ const passport = require('passport');
 const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require("passport-facebook");
+const GitHubStrategy = require("passport-github2");
 const findOrCreate = require("mongoose-findorcreate");
-/*
-<script>
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '{your-app-id}',
-      cookie     : true,
-      xfbml      : true,
-      version    : '{api-version}'
-    });
-      
-    FB.AppEvents.logPageView();   
-      
-  };
 
-  (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "https://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
-</script>*/
 const app = express();
 //connect to usersDB
 //set view engine
@@ -60,7 +40,8 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    facebookId:String
+    facebookId:String,
+    githubId:String
 });
 //create user model
 userSchema.plugin(passportLocalMongoose);
@@ -102,6 +83,19 @@ passport.use(new FacebookStrategy({
     });
   }
 ));
+
+passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/github/secrets"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(profile);
+    User.findOrCreate({ githubId: profile.id },(err, user)=> {
+      return done(err, user);
+    });
+  }
+));
 app.get("/", (req, res) => {
     res.render("home");
 });
@@ -124,6 +118,17 @@ app.get("/auth/facebook/secrets",
     // Successful authentication, redirect home.
     res.redirect("/secrets");
   });
+
+  app.get("/auth/github",
+  passport.authenticate("github", { scope: [ "user:email" ] }));
+
+app.get("/auth/github/secrets", 
+  passport.authenticate("github", { failureRedirect: "/login" }),
+  function(req, res) {
+    // Successful authentication, redirect secrets.
+    res.redirect("/secrets");
+  });
+
 
 app.route("/login")
     .get((req, res) => {
